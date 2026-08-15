@@ -509,7 +509,8 @@ async def task_select(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         ctx.user_data["task"] = "tiktok"
         ctx.user_data["tt_username"] = tt_user
         await update.message.reply_text(
-            f"`👤 Username: {tt_user}`\n`🔑 Password: {tt_pass}`\n\n"
+            f"👤 Username:\n`{tt_user}`\n\n"
+            f"🔑 Password:\n`{tt_pass}`\n\n"
             "🧾 উপরের ইউজারনেম এবং পাসওয়ার্ড দিয়ে অ্যাকাউন্ট খুলুন।\n"
             "তারপর 2FA চালু করুন এবং নিচে 2FA Set বাটনে ক্লিক করুন 👋",
             parse_mode="Markdown",
@@ -523,7 +524,8 @@ async def task_select(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         ctx.user_data["task"] = "insta"
         ctx.user_data["insta_username"] = insta_user
         await update.message.reply_text(
-            f"`👤 Username: {insta_user}`\n`🔑 Password: {insta_pass}`\n\n"
+            f"👤 Username:\n`{insta_user}`\n\n"
+            f"🔑 Password:\n`{insta_pass}`\n\n"
             "🧾 উপরের ইউজারনেম এবং পাসওয়ার্ড দিয়ে অ্যাকাউন্ট খুলুন।\n"
             "তারপর 2FA চালু করুন এবং নিচে 2FA Set বাটনে ক্লিক করুন 👋",
             parse_mode="Markdown",
@@ -1081,6 +1083,34 @@ async def cmd_report(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     set_setting("report_time", val)
     await update.message.reply_text(f"✅ Wait time আপডেট হয়েছে: {val}")
 
+@superadmin_only
+async def cmd_broadcast(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not ctx.args:
+        await update.message.reply_text(
+            "📢 সব user এর কাছে message পাঠাতে:\n"
+            "/broadcast <message>"
+        )
+        return
+
+    msg = " ".join(ctx.args)
+    cur.execute("SELECT user_id FROM users")
+    users = cur.fetchall()
+
+    success = 0
+    failed = 0
+    for (user_id,) in users:
+        try:
+            await ctx.bot.send_message(user_id, msg)
+            success += 1
+        except Exception:
+            failed += 1
+
+    await update.message.reply_text(
+        f"📢 Broadcast সম্পন্ন!\n\n"
+        f"✅ সফল: {success} জন\n"
+        f"❌ ব্যর্থ: {failed} জন"
+    )
+
 @admin_only
 async def cmd_clear(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     cur.execute("DELETE FROM tiktok_accounts")
@@ -1142,6 +1172,7 @@ def main():
     app.add_handler(CommandHandler("xlinsta", cmd_xlinsta))
     app.add_handler(CommandHandler("clear", cmd_clear))
     app.add_handler(CommandHandler("report", cmd_report))
+    app.add_handler(CommandHandler("broadcast", cmd_broadcast))
     app.add_handler(CommandHandler("534757", cmd_toggle_bot))
 
     # Catch-all for unmatched home buttons outside conversation
