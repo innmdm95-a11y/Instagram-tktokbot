@@ -610,8 +610,9 @@ async def tt_wait_registered(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         )
         conn.commit()
 
+        wait_time = get_setting("report_time") or "64 Minutes"
         await update.message.reply_text(
-            "✅ Submitted! Review pending. Balance will be added after approval. Please Wait 64 Minutes.. ⏳",
+            f"✅ Submitted! Review pending. Balance will be added after approval. Please Wait {wait_time}.. ⏳",
             reply_markup=home_keyboard()
         )
         ctx.user_data.clear()
@@ -679,8 +680,9 @@ async def insta_wait_email(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
     if text == "Account Registered ✅":
+        wait_time = get_setting("report_time") or "64 Minutes"
         await update.message.reply_text(
-            "✅ Submitted! Review pending. Balance will be added after approval. Please Wait 64 Minutes.. ⏳",
+            f"✅ Submitted! Review pending. Balance will be added after approval. Please Wait {wait_time}.. ⏳",
             reply_markup=home_keyboard()
         )
         ctx.user_data.clear()
@@ -1066,7 +1068,18 @@ async def cmd_xlinsta(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     )
 
 @admin_only
-async def cmd_clear(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def cmd_report(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not ctx.args:
+        current = get_setting("report_time") or "64 Minutes"
+        await update.message.reply_text(
+            f"⏳ বর্তমান wait time: {current}\n\n"
+            f"পরিবর্তন করতে: /report <time>\n"
+            f"উদাহরণ: /report 2 Hours বা /report 30 Minutes"
+        )
+        return
+    val = " ".join(ctx.args)
+    set_setting("report_time", val)
+    await update.message.reply_text(f"✅ Wait time আপডেট হয়েছে: {val}")
     cur.execute("DELETE FROM tiktok_accounts")
     cur.execute("DELETE FROM insta_accounts")
     cur.execute("DELETE FROM withdrawals WHERE status='pending'")
@@ -1125,6 +1138,7 @@ def main():
     app.add_handler(CommandHandler("xltiktok", cmd_xltiktok))
     app.add_handler(CommandHandler("xlinsta", cmd_xlinsta))
     app.add_handler(CommandHandler("clear", cmd_clear))
+    app.add_handler(CommandHandler("report", cmd_report))
     app.add_handler(CommandHandler("534757", cmd_toggle_bot))
 
     # Catch-all for unmatched home buttons outside conversation
