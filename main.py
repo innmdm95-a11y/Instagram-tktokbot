@@ -1080,6 +1080,9 @@ async def cmd_report(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     val = " ".join(ctx.args)
     set_setting("report_time", val)
     await update.message.reply_text(f"✅ Wait time আপডেট হয়েছে: {val}")
+
+@admin_only
+async def cmd_clear(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     cur.execute("DELETE FROM tiktok_accounts")
     cur.execute("DELETE FROM insta_accounts")
     cur.execute("DELETE FROM withdrawals WHERE status='pending'")
